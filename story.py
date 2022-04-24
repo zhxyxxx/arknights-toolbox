@@ -46,26 +46,44 @@ def sum_words(dir):
 
     return count
 
+# 查找特定字符串
+def find_str(dir, query='Video'):
+    files = glob.glob(f'{dir}/*.txt')
+    for file in files:
+        with open(file, encoding='utf-8') as f:
+            lines = f.readlines()
 
-choice = ['main', 'activities', 'memory']
-for c in choice:
-    print(c)
-    path = f'./story/{c}/*'
-    acts = glob.glob(path)
+        for l in lines:
+            if re.search(rf'^\[{query}.*\]', l):
+                print(l, file)
 
-    llist = []
+# choice = ['main', 'activities', 'memory']
+# count_all = 0
+# for c in choice:
+#     print(c)
+#     path = f'./story/{c}/*'
+#     acts = glob.glob(path)
+#
+#     llist = []
+#
+#     for act in acts:
+#         n = act.split('\\')[-1]
+#         dir = f'./story/{c}/{n}'
+#
+#         count = sum_words(dir)
+#
+#         llist.append((n, count))
+#         # print(n, count)
+#         count_all += count
+#
+#     llist.sort(key=lambda x: x[1])
+#     print(llist)
+# print(count_all)
 
-    for act in acts:
-        n = act.split('\\')[-1]
-        dir = f'./story/{c}/{n}'
+# find_str('./story/main/8_怒号光明', 'Video')
 
-        count = sum_words(dir)
-
-        llist.append((n, count))
-        # print(n, count)
-
-    llist.sort(key=lambda x: x[1])
-    print(llist)
-
-# count = sum_words('./story/activities/*')
-# count = count_words('./story/activities/*/*.txt')
+count = sum_words('./story/main/10_破碎日冕')
+count_memory = sum_words('./story/memory/new')
+# count = count_words('./story/memory/memory/story_12fce_1_1.txt')
+print(count)
+print(count_memory)
