@@ -54,12 +54,7 @@ for op in data:
         d = t.xpath('//table[@class="wikitable logo"]/tbody/tr/td/div/a/@title')  # 素材
         num = t.xpath('//table[@class="wikitable logo"]/tbody/tr/td/div/span/text()')  # 数量
         if len(d) == 0:
+            print(op, '读取失败或无相关数据')
             continue
         print(op, d[2], num[2], d[3], num[3], d[6], num[6], d[7], num[7], date)
     time.sleep(1)
-
-'''
-# execl计算公式
-for i in range(len(data)):
-    print(f"=VLOOKUP(B{i+2},N2:O40,2,0)*C{i+2}+VLOOKUP(D{i+2},N2:O40,2,0)*E{i+2}+VLOOKUP(F{i+2},N2:O40,2,0)*G{i+2}+VLOOKUP(H{i+2},N2:O40,2,0)*I{i+2}")
-'''
