@@ -1,0 +1,7 @@
+kaleido==0.1.0.post1
+numpy
+pandas
+plotly
+pywin32
+gitpython
+pillow

@@ -103,7 +103,7 @@ def plot_v(df, show=True):
 def _solve_df_for_table(df, focus_act):
     # 处理在表格中显示的数据
     df_main = df[["sname", "charnum", 'time', 'type']]
-    df_main.sort_values(by='charnum', ascending=False, inplace=True)
+    df_main = df_main.sort_values(by='charnum', ascending=False)
     df_main.reset_index(drop=True, inplace=True)
     df_main.drop(index=df_main[df_main['charnum']==0].index, inplace=True)
     actnum = len(df_main)
