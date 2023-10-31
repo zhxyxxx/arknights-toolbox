@@ -5,3 +5,6 @@ plotly
 pywin32
 gitpython
 pillow
+requests
+lxml
+pyautogui

@@ -1,6 +1,7 @@
 import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
+from PIL import Image, ImageDraw, ImageFont
 # 可视化相关
 
 
@@ -100,7 +101,7 @@ def plot_v(df, show=True):
     return fig
 
 
-def _solve_df_for_table(df, focus_act):
+def _solve_df_for_table(df, focus_act=None):
     # 处理在表格中显示的数据
     df_main = df[["sname", "charnum", 'time', 'type']]
     df_main = df_main.sort_values(by='charnum', ascending=False)
@@ -122,6 +123,8 @@ def _solve_df_for_table(df, focus_act):
     # n<=5 [1, 10]
     # 6<=n<=15 [1, n+5]
     # n>=16 [1, 5]∪[n-5, n+5]
+    if focus_act == None:
+        return df_main, df_print
     focus_item = df_print[df_print['活动']==focus_act]
     assert len(focus_item) == 1, (f'不存在的活动名: {focus_act}')
     fidx = focus_item['@x叉X叉x'].values[0]
@@ -151,7 +154,7 @@ def _solve_df_for_table(df, focus_act):
     return df_main, df_print
 
 
-def plot_table(df, focus_act, show=True):
+def plot_table(df, focus_act=None, show=True):
     # 数据表格
     ''' args
     df: 目标dataframe
@@ -186,3 +189,50 @@ def plot_table(df, focus_act, show=True):
     if show:
         fig.show()
     return fig
+
+
+def crop_img(img_path, output_path=None, padding=10):
+    # 裁剪图片白边
+    ''' args
+    img_path: 目标图片所在路径
+    output_path: 输出路径(为None时自动覆盖原图片)
+    padding: 四周留出的白边范围
+
+    return
+    img_crop(type: Image): 裁剪后的图片
+    '''
+    img = Image.open(img_path)
+    img_np = np.array(img.convert('L'))
+
+    white_col = np.where(np.all(img_np == 255, axis=0) == False)[0] # 列
+    white_row = np.where(np.all(img_np == 255, axis=1) == False)[0] # 行
+    col_range = (white_col[0]-padding, white_col[-1]+padding)
+    row_range = (white_row[0]-padding, white_row[-1]+padding)
+
+    img_crop = img.crop((col_range[0], row_range[0], col_range[1], row_range[1]))
+    if output_path is None:
+        output_path = img_path
+    img_crop.save(output_path)
+    return img_crop
+
+
+def watermark(img, x=75, y=50, character='@x叉X叉x', fontfile='msyh.ttc', fontsize=50, color='black', output_path=None):
+    # 添加水印
+    ''' args
+    img: 目标图片
+    x, y: 添加水印的坐标
+    character: 水印文字
+    fontfile: 使用的字体文件
+    fontsize: 字体大小
+    color: 字体颜色
+    output_path: 输出路径
+
+    return
+    img(type: Image): 添加水印后的图片
+    '''
+    draw = ImageDraw.Draw(img)
+    fnt = ImageFont.truetype(fontfile, fontsize)
+    draw.text((x, y), character, color, font=fnt)
+    if output_path is not None:
+        img.save(output_path)
+    return img

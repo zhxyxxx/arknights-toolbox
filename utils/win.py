@@ -1,5 +1,8 @@
 import win32gui, win32api, win32con
-import time
+import time, io
+import win32clipboard as w
+import pyautogui
+from PIL import Image
 # windows系统相关操作
 
 
@@ -10,8 +13,8 @@ def get_all_window():
     '''
     titles = set()
     def foo(hwnd, mouse):
-    	if win32gui.IsWindow(hwnd) and win32gui.IsWindowEnabled(hwnd) and win32gui.IsWindowVisible(hwnd):
-    		titles.add(win32gui.GetWindowText(hwnd))
+        if win32gui.IsWindow(hwnd) and win32gui.IsWindowEnabled(hwnd) and win32gui.IsWindowVisible(hwnd):
+            titles.add(win32gui.GetWindowText(hwnd))
 
     win32gui.EnumWindows(foo, 0)
     lt = [t for t in titles if t]
@@ -30,16 +33,16 @@ def find_window(window_name):
     hwnd_list = []
     lt = get_all_window()
     for t in lt:
-    	if(t.find(window_name)) >= 0:
-    		hwnd_list.append(win32gui.FindWindow(None, t))
+        if(t.find(window_name)) >= 0:
+            hwnd_list.append(win32gui.FindWindow(None, t))
     return hwnd_list
 
 
 def print_mouse_pos():
     # 输出光标的绝对位置坐标
     while True:
-    	print(win32gui.GetCursorPos())
-    	time.sleep(2)
+        print(win32gui.GetCursorPos())
+        time.sleep(2)
 
 
 def sim_click(hwnd, x, y):
@@ -73,13 +76,13 @@ def hard_inf(x1, y1, x2, y2, limit=100000, interval=5):
     '''
     cnt = limit
     while cnt > 0:
-    	hard_click(x1, y1)
-    	time.sleep(interval)
-    	hard_click(x1, y1)
-    	time.sleep(interval)
-    	hard_click(x2, y2)
-    	time.sleep(interval)
-    	cnt -= 3 * interval
+        hard_click(x1, y1)
+        time.sleep(interval)
+        hard_click(x1, y1)
+        time.sleep(interval)
+        hard_click(x2, y2)
+        time.sleep(interval)
+        cnt -= 3 * interval
 
 
 def sim_inf(hwnd, x1, y1, x2, y2, limit=100000, interval=5):
@@ -117,3 +120,32 @@ def sim_inf_onepoint(hwnd, x, y, limit=100000, interval=5):
         sim_click(hwnd, x, y)
         time.sleep(interval)
         cnt -= interval
+
+
+def send_qq(content, is_text=True):
+    if not is_text:
+        img = Image.open(content)
+        output = io.BytesIO()
+        img.convert("RGB").save(output, "BMP")
+        data = output.getvalue()[14:]
+        output.close()
+
+    time.sleep(1)
+    w.OpenClipboard()
+    w.EmptyClipboard()
+    if is_text:
+        w.SetClipboardData(win32con.CF_UNICODETEXT, content)
+    else:
+        w.SetClipboardData(win32con.CF_DIB, data)
+    w.CloseClipboard()
+
+    handle = win32gui.FindWindow(None, "X-X-X")
+    win32gui.SetWindowPos(handle, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+    time.sleep(1)
+    left, top, right, bottom = win32gui.GetWindowRect(handle)
+    pyautogui.moveTo(left + 100, bottom - 100)
+    pyautogui.click()
+    win32gui.SendMessage(handle, win32con.WM_PASTE, 0, 0)
+    time.sleep(2)
+    win32gui.SendMessage(handle, win32con.WM_KEYDOWN, win32con.VK_RETURN)
+    win32gui.SetWindowPos(handle, win32con.HWND_NOTOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)

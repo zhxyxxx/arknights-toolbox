@@ -28,11 +28,15 @@ if args.anniversary:
 
 page = requests.get('http://prts.wiki/w/%E5%B9%B2%E5%91%98%E4%B8%80%E8%A7%88')
 tree = html.fromstring(page.text)
-data = tree.xpath(f'//div[@class="smwdata" and @data-rarity="{star-1}"]/@data-cn')
-print(f"共{len(data)}名{star}星干员")
-print(data)
+data = tree.get_element_by_id('filter-data')
+operators = []
+for d in list(data):
+    if int(d.get('data-rarity')) == star-1:
+        operators.append((d.get('data-zh')))
+print(f"共{len(operators)}名{star}星干员")
+print(operators)
 
-for op in data:
+for op in operators:
     link = 'http://prts.wiki/w/' + op
     flag = True
 
