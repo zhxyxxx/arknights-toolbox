@@ -216,7 +216,7 @@ def crop_img(img_path, output_path=None, padding=10):
     return img_crop
 
 
-def watermark(img, x=75, y=50, character='@x叉X叉x', fontfile='msyh.ttc', fontsize=50, color='black', output_path=None):
+def watermark(img, x=75, y=50, character='@x叉X叉x', fontfile='./resource/msyh.ttc', fontsize=50, color='black', output_path=None):
     # 添加水印
     ''' args
     img: 目标图片

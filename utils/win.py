@@ -122,7 +122,13 @@ def sim_inf_onepoint(hwnd, x, y, limit=100000, interval=5):
         cnt -= interval
 
 
-def send_qq(content, is_text=True):
+def send_qq(content, is_text=True, user_name="X-X-X"):
+    # 向qq窗口发送消息
+    ''' args
+    content: 消息内容
+    is_text: 消息内容是否为文字（否则识别为图片）
+    user_name: 发送对象用户名（确保已且仅打开该用户聊天窗口）
+    '''
     if not is_text:
         img = Image.open(content)
         output = io.BytesIO()
@@ -139,7 +145,7 @@ def send_qq(content, is_text=True):
         w.SetClipboardData(win32con.CF_DIB, data)
     w.CloseClipboard()
 
-    handle = win32gui.FindWindow(None, "X-X-X")
+    handle = win32gui.FindWindow(None, user_name)
     win32gui.SetWindowPos(handle, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
     time.sleep(1)
     left, top, right, bottom = win32gui.GetWindowRect(handle)

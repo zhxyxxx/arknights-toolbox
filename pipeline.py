@@ -6,15 +6,11 @@ import csv
 import git
 import time
 import pandas as pd
-from utils import story, visualize, win
+from utils import story, visualize, win, utils
 
-# 前提:
-# 每月活动不超过2个
-# 每月同种类型活动不超过1个
 # 主线格式：章节号_名字
 
 # 未实装：
-# 更完善的文件名冲突解决办法
 # 发送程序log至qq
 # 自动生成文案
 # 重复执行
@@ -152,13 +148,9 @@ for jj in range(24):
     if acttype == 'main':
         actname = f'EP{actname}'
     fig_table = visualize.plot_table(df, actname, False)
-    fig_path = f"./data/full_{acttime}.png"
-    if os.path.isfile(fig_path):
-        fig_path = f"./data/full_{acttime}_2.png"
-    fig_table_path = f"./data/table_{acttime}.png"
-    if os.path.isfile(fig_table_path):
-        fig_table_path = f"./data/table_{acttime}_2.png"
-    fig_part_path = f"./data/{acttype}_{acttime}.png"
+    fig_path = utils.solve_filename(f'full_{acttime}.png')
+    fig_table_path = utils.solve_filename(f'table_{acttime}.png')
+    fig_part_path = utils.solve_filename(f'{acttype}_{acttime}.png')
     fig.write_image(fig_path, engine="kaleido")
     fig_part.write_image(fig_part_path, engine="kaleido")
     fig_table.write_image(fig_table_path, engine="kaleido")
