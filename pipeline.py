@@ -12,19 +12,30 @@ from utils import story, visualize, win, utils
 
 # 未实装：
 # 发送程序log至qq
-# 自动生成文案
-# 重复执行
+# 非AVG剧情处理
 
 
-for jj in range(24):
-    if jj > 0:
-        time.sleep(900)
+acttime = 202312
+actname = "银心湖列车"
+acttype = "act_ss"  # main, act_ss, act_om
+if acttype == 'main':
+    recordname = ''
+memory_list = ["灵知", "烈夏", "耶拉", "星极"]
 
+king = '孤星'
+limit_hour = 12
+internal_minute = 15
 
-    acttime = 202311
-    actname = "崔林特尔梅之金"
-    acttype = "act_ss"  # main, act_ss, act_om
-    memory_list = ["塑心", "早露", "折光", "车尔尼", "寒檀", "暮落"]
+#####################################################
+
+exec_time = 0
+
+while True:
+    if exec_time > limit_hour * 60 * 60:
+        break
+    if exec_time > 0:
+        time.sleep(internal_minute * 60)
+    exec_time += internal_minute * 60
 
 
     # 更新github
@@ -32,8 +43,8 @@ for jj in range(24):
     info = git_repo.remotes.origin.fetch()
     info = git_repo.git.pull()
     if info == "Already up to date.":
-        print("尚未更新")
-        win.send_qq("尚未更新")
+        print("github未发现新内容")
+        win.send_qq("github未发现新内容")
     else:
         print(info)
 
@@ -166,7 +177,37 @@ for jj in range(24):
     win.send_qq(fig_part_path, False)
     win.send_qq(fig_table_path, False)
 
+
+    # 自动输出文案
+    with open("./data/event.csv", mode="r", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        act_list = [row for row in reader][1:-1]
+    minimal = 999999
+    nearest = ''
+    for act in act_list:
+        if abs(count - int(act[2])) < minimal and act[4] == acttype:
+            minimal = abs(count - int(act[2]))
+            nearest = act[1]
+    king_count = utils.get_act_count(king)
+    memory_op = ''
+    for op in memory_list:
+        memory_op += f'【{op}】、'
+    memory_op = memory_op[:-1]
+
+    if acttype == 'main':
+        writes = utils.TEMPLATE_MAIN.format(actname.split('_')[0], actname.split('_')[1], story_count[0], recordname, story_count[1],
+                                            count/10000, nearest.split('_')[0], nearest.split('_')[1], utils.round_005(count/king_count), king, 
+                                            memory_op, memory_count, count_memory/10000)
+    elif acttype == 'act_ss':
+        writes = utils.TEMPLATE_SS.format(actname, story_count, count/10000, nearest, utils.round_005(count/king_count), king, 
+                                          memory_op, memory_count, count_memory/10000)
+    elif acttype == 'act_om':
+        writes = utils.TEMPLATE_OM.format(actname, story_count, count/10000, nearest, 
+                                          memory_op, memory_count, count_memory/10000)
+    print(writes)
+    win.send_qq(writes)
+
     break
 
+print("程序已停止")
 win.send_qq("程序已停止")
-exit()
