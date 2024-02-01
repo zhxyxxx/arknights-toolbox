@@ -1,6 +1,7 @@
 # 泛用处理
 import os
 import pandas as pd
+import logging
 
 
 def solve_filename(filename, dir='./data'):
@@ -59,12 +60,36 @@ def round_005(x):
     return x
 
 
+def set_logger(level_st=logging.DEBUG, level_fl=logging.DEBUG, log_file='logging.txt'):
+    # 初始化logger
+    ''' args
+    level_st: 在命令行中输出log的等级
+    level_fl: 在文件中输出log的等级
+    log_file: 输出log的文件
+
+    return
+    logger: 初始化后可使用的logger
+    '''
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    format = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', '%H:%M:%S')
+    st_handler = logging.StreamHandler()
+    fl_handler = logging.FileHandler(filename=log_file, encoding='utf-8', mode='w')
+    st_handler.setFormatter(format)
+    fl_handler.setFormatter(format)
+    st_handler.setLevel(level_st)
+    fl_handler.setLevel(level_fl)
+    logger.addHandler(st_handler)
+    logger.addHandler(fl_handler)
+    return logger
+
+
 TEMPLATE_SS = '#明日方舟# 剧情文本量速览\n\
 SideStory「#{}#」内含主要剧情{}段，总计约{:.1f}万字，剧情长度与「{}」相近，约等于{}个「{}」。\n\
 另外本次更新新增{}共{}篇干员密录，总计约{:.1f}万字。'
 
 TEMPLATE_MAIN = '#明日方舟# 剧情文本量速览\n\
-主题曲{}「#{}#」内含主要剧情{}段，以及「{}」内的{}段剧情，总计约{:.1f}万字，剧情长度与{}「{}」相当，约等于{}个「{}」。\n\
+主题曲{}「#{}#」内含主要剧情{}段，总计约{:.1f}万字，剧情长度与{}「{}」相当，约等于{}个「{}」。\n\
 另外本次更新新增{}共{}篇干员密录，总计约{:.1f}万字。'
 
 TEMPLATE_OM = '#明日方舟# 剧情文本量速览\n\

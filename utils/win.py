@@ -3,6 +3,7 @@ import time, io
 import win32clipboard as w
 import pyautogui
 from PIL import Image
+from ctypes import *
 # windows系统相关操作
 
 
@@ -122,36 +123,73 @@ def sim_inf_onepoint(hwnd, x, y, limit=100000, interval=5):
         cnt -= interval
 
 
-def send_qq(content, is_text=True, user_name="X-X-X"):
+def send_qq(content, logger, data_format='text', user_name="X-X-X"):
     # 向qq窗口发送消息
+    # TODO: 内容格式file暂不可用，此时无法使用WM_PASTE模拟粘贴剪贴板上的文件
     ''' args
     content: 消息内容
-    is_text: 消息内容是否为文字（否则识别为图片）
+    logger: 用于记录的logger
+    data_format: 消息内容的格式(text, image, file)
     user_name: 发送对象用户名（确保已且仅打开该用户聊天窗口）
+
+    return
+    e: 发生的例外(无例外发生时返回0)
     '''
-    if not is_text:
+    class DROPFILES(Structure):
+        _fields_ = [("pFiles", c_uint),
+                    ("x", c_long),
+                    ("y", c_long),
+                    ("fNC", c_int),
+                    ("fWide", c_bool),
+                   ]
+
+    if data_format == 'image':
         img = Image.open(content)
         output = io.BytesIO()
         img.convert("RGB").save(output, "BMP")
         data = output.getvalue()[14:]
         output.close()
+    elif data_format == 'file':
+        pDropFiles = DROPFILES()
+        pDropFiles.pFiles = sizeof(DROPFILES)
+        pDropFiles.fWide = True
+        metadata = bytes(pDropFiles)
+        files = content.replace("/", "\\")
+        data = metadata + files.encode("U16")[2:]
 
     time.sleep(1)
-    w.OpenClipboard()
-    w.EmptyClipboard()
-    if is_text:
-        w.SetClipboardData(win32con.CF_UNICODETEXT, content)
-    else:
-        w.SetClipboardData(win32con.CF_DIB, data)
-    w.CloseClipboard()
+    try:
+        w.OpenClipboard()
+        w.EmptyClipboard()
+        if data_format == 'text':
+            w.SetClipboardData(win32con.CF_UNICODETEXT, content)
+        elif data_format == 'image':
+            w.SetClipboardData(win32con.CF_DIB, data)
+        elif data_format == 'file':
+            w.SetClipboardData(win32con.CF_HDROP, data)
+    except Exception as e:
+        logger.error(f'发送\'{content}\'至QQ时发生例外: {e}')
+        return e
+    finally:
+        w.CloseClipboard()
 
     handle = win32gui.FindWindow(None, user_name)
-    win32gui.SetWindowPos(handle, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
-    time.sleep(1)
-    left, top, right, bottom = win32gui.GetWindowRect(handle)
-    pyautogui.moveTo(left + 100, bottom - 100)
-    pyautogui.click()
-    win32gui.SendMessage(handle, win32con.WM_PASTE, 0, 0)
-    time.sleep(2)
-    win32gui.SendMessage(handle, win32con.WM_KEYDOWN, win32con.VK_RETURN)
-    win32gui.SetWindowPos(handle, win32con.HWND_NOTOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+    if handle == 0:
+        logger.error(f'发送\'{content}\'至QQ时发生例外: 未找到窗口{user_name}')
+        return -1
+    try:
+        win32gui.SetWindowPos(handle, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+        time.sleep(1)
+        left, top, right, bottom = win32gui.GetWindowRect(handle)
+        pyautogui.moveTo(left + 100, bottom - 100)
+        pyautogui.click()
+        win32gui.SendMessage(handle, win32con.WM_PASTE, 0, 0)
+        time.sleep(2)
+        win32gui.SendMessage(handle, win32con.WM_KEYDOWN, win32con.VK_RETURN)
+    except Exception as e:
+        logger.error(f'发送\'{content}\'至QQ时发生例外: {e}')
+        return e
+    finally:
+        win32gui.SetWindowPos(handle, win32con.HWND_NOTOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+    
+    return 0
