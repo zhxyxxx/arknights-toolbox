@@ -1,5 +1,6 @@
 import re
 import glob
+import os
 # 剧情文件相关处理
 
 
@@ -28,9 +29,13 @@ def count_words_in_file(file):
             l0 = l0[0]
         elif re.search(r'^\[Decision.*\]', l):
             # Desicion 可选对话
-            l0 = re.findall('options="(.*?)"', l)
-            assert len(l0) == 1
-            l0 = re.sub(';', '', l0[0])
+            l0 = re.findall('option.="(.*?)"', l)
+            if len(l0) == 1:
+                # AVG剧情内选项
+                l0 = re.sub(';', '', l0[0])
+            else:
+                # 关卡剧情内选项
+                l0 = ''.join(l0)
         else:
             # 其它正常的对话框字幕
             l0 = re.sub('^\[.*?\]', '', l)
@@ -56,6 +61,21 @@ def sum_words_in_dir(dir):
     count = 0
     for file in files:
         count += count_words_in_file(file)
+    return count
+
+
+def sum_words_hierarchy(dir):
+    # 计算文件夹中包括所有子文件夹中的文件字数合计
+    ''' args
+    dir: 目标文件夹路径
+
+    return
+    count(type: int): 文件夹中的剧情字数合计
+    '''
+    count = 0
+    for root, dirs, files in os.walk(dir):
+        for f in files:
+            count += count_words_in_file(os.path.join(root, f))
     return count
 
 
