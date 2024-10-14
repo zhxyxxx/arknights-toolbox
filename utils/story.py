@@ -36,6 +36,13 @@ def count_words_in_file(file):
             else:
                 # 关卡剧情内选项
                 l0 = ''.join(l0)
+        elif re.search(r'^\[Sticker.*\]', l):
+            # Sticker 画面中央多行字幕
+            l0 = re.findall('text="(.*?)"', l)
+            if len(l0) == 0:
+                continue
+            assert len(l0) == 1
+            l0 = l0[0]
         else:
             # 其它正常的对话框字幕
             l0 = re.sub('^\[.*?\]', '', l)
@@ -44,6 +51,7 @@ def count_words_in_file(file):
             continue
         l0 = re.sub(' ', '', l0)
         l0 = re.sub('\\\\n', '', l0)
+        l0 = re.sub('<.*?>', '', l0)
         count += len(l0)
         # print(l0, len(l0))
     return count
@@ -64,18 +72,27 @@ def sum_words_in_dir(dir):
     return count
 
 
-def sum_words_hierarchy(dir):
+def sum_words_hierarchy(dir, ignore=[], show_detail=False):
     # 计算文件夹中包括所有子文件夹中的文件字数合计
     ''' args
     dir: 目标文件夹路径
+    ignore: 跳过指定子文件夹
+    show_detail: 显示各子文件夹的详细数据
 
     return
     count(type: int): 文件夹中的剧情字数合计
     '''
     count = 0
     for root, dirs, files in os.walk(dir):
+        if root.split('\\')[-1] in ignore:
+            continue
+        count_subdir = 0
         for f in files:
-            count += count_words_in_file(os.path.join(root, f))
+            count_file = count_words_in_file(os.path.join(root, f))
+            count += count_file
+            count_subdir += count_file
+        if show_detail:
+            print(root.split('/')[-1], count_subdir)
     return count
 
 

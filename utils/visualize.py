@@ -112,7 +112,7 @@ def _solve_df_for_table(df, focus_act=None):
     for i in range(len(df_main)):
         if df_main.iloc[i].type == 'main':
             act = df_main.iloc[i].sname
-            df_main.iat[i, 0] = f'EP{int(act[0:2]):02}_{act[3:]}'
+            df_main.iat[i, 0] = f'EP{int(act[0:2]):02} {act[3:]}'
 
     df_print = df_main.drop(columns='type', inplace=False)
     text = list(map(lambda x: f'{x/10000:.02f}万', df_print['charnum'].values))

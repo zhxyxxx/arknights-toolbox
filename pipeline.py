@@ -12,15 +12,20 @@ from utils import story, visualize, win, utils
 
 logger = utils.set_logger()
 
-acttime = 202402
-actname = "怀黍离"
+acttime = 202410
+actname = "追迹日落以西"
 acttype = "act_ss"  # main, act_ss, act_om
-memory_list = ["黍", "仇白", "铎铃", "崖心"]
+memory_list = ["白铁", "深律", "莎草", "苦艾"]
 
-king = '孤星'
-limit_hour = 1 # 最长执行时间(h)
+king = '14_慈悲灯塔'
+limit_hour = 7 # 最长执行时间(h)
 internal_minute = 15 # 每次执行间隔(min)
 wait_start_hour = 0 # 执行开始前等待时间(h)
+
+# git_repo = '../ArknightsGameData'
+# home_dir = '../ArknightsGameData/zh_CN'
+git_repo = '../ArknightsGameResource'
+home_dir = '../ArknightsGameResource'
 
 #####################################################
 
@@ -40,7 +45,7 @@ try:
 
 
         # 更新github
-        git_repo = git.Repo("../ArknightsGameData")
+        git_repo = git.Repo(git_repo)
         info = git_repo.remotes.origin.fetch()
         info = git_repo.git.pull()
         if info == "Already up to date.":
@@ -52,8 +57,8 @@ try:
         # 复制剧情文件至指定文件夹
         if acttype == "main":
             chapter = int(actname.split("_")[0])
-            ori_data = f"../ArknightsGameData/zh_CN/gamedata/story/obt/main/*_{chapter:02}-*.txt"
-            # record_data = f"../ArknightsGameData/zh_CN/gamedata/story/obt/record/main_{chapter:02}/*.txt"
+            ori_data = f"{home_dir}/gamedata/story/obt/main/*_{chapter:02}-*.txt"
+            # record_data = f"{home_dir}/gamedata/story/obt/record/main_{chapter:02}/*.txt"
             file_list = glob.glob(ori_data)
             story_count = len(file_list)
             save_dir = f"./story/main/{actname}"
@@ -62,7 +67,7 @@ try:
                 win.send_qq(f"尚未更新 {actname}", logger, 'text')
                 continue
         elif acttype == "act_ss" or acttype == "act_om":
-            with open("../ArknightsGameData/zh_CN/gamedata/excel/activity_table.json", encoding="utf-8") as dic:
+            with open(f"{home_dir}/gamedata/excel/activity_table.json", encoding="utf-8") as dic:
                 act_dict = json.load(dic)
             act2id = {}  # 通过活动名获取id
             for k, v in act_dict["basicInfo"].items():
@@ -73,7 +78,7 @@ try:
                 continue
             else:
                 code = act2id[actname]
-            ori_data = f"../ArknightsGameData/zh_CN/gamedata/story/activities/{code}/*.txt"
+            ori_data = f"{home_dir}/gamedata/story/activities/{code}/*.txt"
             file_list = glob.glob(ori_data)
             save_dir = f"./story/activities/{actname}"
             story_count = len(file_list)
@@ -107,7 +112,7 @@ try:
             shutil.move(f, "./story/memory/memory")
             logger.debug(f"move previous {f} to ./story/memory/memory")
 
-        with open("../ArknightsGameData/zh_CN/gamedata/excel/character_table.json", encoding="utf-8") as dic:
+        with open(f"{home_dir}/gamedata/excel/character_table.json", encoding="utf-8") as dic:
             chr_dict = json.load(dic)
         chr2id = {}  # 通过干员名获取id
         for k, v in chr_dict.items():
@@ -116,7 +121,7 @@ try:
 
         existed_memory_file = glob.glob("./story/memory/memory/*.txt")
         existed_memory_file = list(map(lambda x: x.split("/")[-1], existed_memory_file))
-        ori_memory_data = "../ArknightsGameData/zh_CN/gamedata/story/obt/memory"
+        ori_memory_data = f"{home_dir}/gamedata/story/obt/memory"
         memory_file_list = []
         for chr in memory_list:
             if chr not in chr2id:
@@ -192,6 +197,7 @@ try:
             memory_op += f'【{op}】、'
         memory_op = memory_op[:-1]
 
+        king = king.split('_')[-1]
         if acttype == 'main':
             writes = utils.TEMPLATE_MAIN.format(actname.split('_')[0], actname.split('_')[1], story_count, count/10000,
                                                 nearest.split('_')[0], nearest.split('_')[1], utils.round_005(count/king_count), king, 

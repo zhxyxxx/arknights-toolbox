@@ -20,10 +20,10 @@ if args.anniversary:
     anni = args.anniversary
     startyear = 2019
     if anni*10 % 10 == 0: # 周年
-        start = datetime.date(int(startyear+anni-1), 11, 1)
+        start = datetime.date(int(startyear+anni-1), 11, 2)
         end = datetime.date(int(startyear+anni), 5, 1)
     else: # 半周年
-        start = datetime.date(int(startyear+anni-0.5), 5, 1)
+        start = datetime.date(int(startyear+anni-0.5), 5, 2)
         end = datetime.date(int(startyear+anni-0.5), 11, 1)
 
 page = requests.get('http://prts.wiki/w/%E5%B9%B2%E5%91%98%E4%B8%80%E8%A7%88')
