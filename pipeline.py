@@ -12,20 +12,20 @@ from utils import story, visualize, win, utils
 
 logger = utils.set_logger()
 
-acttime = 202410
-actname = "追迹日落以西"
-acttype = "act_ss"  # main, act_ss, act_om
-memory_list = ["白铁", "深律", "莎草", "苦艾"]
+acttime = 202504
+actname = "15_离解复合"
+acttype = "main"  # main, act_ss, act_om
+memory_list = ['凯尔希', '罗宾', '嘉维尔', '安德切尔']
 
 king = '14_慈悲灯塔'
 limit_hour = 7 # 最长执行时间(h)
 internal_minute = 15 # 每次执行间隔(min)
 wait_start_hour = 0 # 执行开始前等待时间(h)
 
-# git_repo = '../ArknightsGameData'
-# home_dir = '../ArknightsGameData/zh_CN'
-git_repo = '../ArknightsGameResource'
-home_dir = '../ArknightsGameResource'
+git_repo_dir = '../ArknightsGameData'
+home_dir = '../ArknightsGameData/zh_CN'
+# git_repo_dir = '../ArknightsGameResource'
+# home_dir = '../ArknightsGameResource'
 
 #####################################################
 
@@ -45,7 +45,7 @@ try:
 
 
         # 更新github
-        git_repo = git.Repo(git_repo)
+        git_repo = git.Repo(git_repo_dir)
         info = git_repo.remotes.origin.fetch()
         info = git_repo.git.pull()
         if info == "Already up to date.":
@@ -161,6 +161,7 @@ try:
         fig_part = visualize.plot_v(df_part, False)
         if acttype == 'main':
             actname = f'EP{actname}'
+            actname = actname.replace('_', ' ')
         fig_table = visualize.plot_table(df, actname, False)
         fig_path = utils.solve_filename(f'full_{acttime}.png')
         fig_table_path = utils.solve_filename(f'table_{acttime}.png')
@@ -199,15 +200,16 @@ try:
 
         king = king.split('_')[-1]
         if acttype == 'main':
-            writes = utils.TEMPLATE_MAIN.format(actname.split('_')[0], actname.split('_')[1], story_count, count/10000,
-                                                nearest.split('_')[0], nearest.split('_')[1], utils.round_005(count/king_count), king, 
-                                                memory_op, memory_count, count_memory/10000)
+            writes = utils.TEMPLATE_MAIN.format(actname.split(' ')[1], actname.split(' ')[0], actname.split(' ')[1], story_count, count/10000,
+                                                nearest.split('_')[0], nearest.split('_')[1], utils.round_005(count/king_count), king)
         elif acttype == 'act_ss':
-            writes = utils.TEMPLATE_SS.format(actname, story_count, count/10000, nearest, utils.round_005(count/king_count), king, 
-                                            memory_op, memory_count, count_memory/10000)
+            writes = utils.TEMPLATE_SS.format(actname, actname, story_count, count/10000, nearest, utils.round_005(count/king_count), king)
         elif acttype == 'act_om':
-            writes = utils.TEMPLATE_OM.format(actname, story_count, count/10000, nearest, 
-                                            memory_op, memory_count, count_memory/10000)
+            writes = utils.TEMPLATE_OM.format(actname, actname, story_count, count/10000, nearest)
+        if len(memory_list) == 0:
+            writes += utils.TEMPLATE_MEMORY_NONE
+        else:
+            writes += utils.TEMPLATE_MEMORY.format(memory_op, memory_count, count_memory/10000)
         logger.info(writes)
         win.send_qq(writes, logger, 'text')
 
