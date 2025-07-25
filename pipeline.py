@@ -12,20 +12,23 @@ from utils import story, visualize, win, utils
 
 logger = utils.set_logger()
 
-acttime = 202504
-actname = "15_离解复合"
-acttype = "main"  # main, act_ss, act_om
-memory_list = ['凯尔希', '罗宾', '嘉维尔', '安德切尔']
+acttime = 202507
+actname = "镜中集"
+actid_pred = 'act19mini'
+acttype = "act_om"  # main, act_ss, act_om
+memory_list = ['嵯峨', '莱伊', '录武官', '锡人']
+
+log_qq = True
 
 king = '14_慈悲灯塔'
 limit_hour = 7 # 最长执行时间(h)
 internal_minute = 15 # 每次执行间隔(min)
 wait_start_hour = 0 # 执行开始前等待时间(h)
 
-git_repo_dir = '../ArknightsGameData'
-home_dir = '../ArknightsGameData/zh_CN'
-# git_repo_dir = '../ArknightsGameResource'
-# home_dir = '../ArknightsGameResource'
+# git_repo_dir = '../ArknightsGameData'
+# home_dir = '../ArknightsGameData/zh_CN'
+git_repo_dir = '../ArknightsGameResource'
+home_dir = '../ArknightsGameResource'
 
 #####################################################
 
@@ -33,7 +36,8 @@ exec_time = 0
 
 time.sleep(wait_start_hour * 60 * 60)
 logger.info('=====开始执行程序=====')
-win.send_qq('=====开始执行程序=====', logger, 'text')
+if log_qq:
+    log_qq = win.send_qq('=====开始执行程序=====', logger, 'text')
 
 try:
     while True:
@@ -64,7 +68,8 @@ try:
             save_dir = f"./story/main/{actname}"
             if len(file_list) == 0:
                 logger.warning(f"未找到活动文件 {actname}")
-                win.send_qq(f"尚未更新 {actname}", logger, 'text')
+                if log_qq:
+                    win.send_qq(f"尚未更新 {actname}", logger, 'text')
                 continue
         elif acttype == "act_ss" or acttype == "act_om":
             with open(f"{home_dir}/gamedata/excel/activity_table.json", encoding="utf-8") as dic:
@@ -73,9 +78,11 @@ try:
             for k, v in act_dict["basicInfo"].items():
                 act2id[v["name"]] = k
             if actname not in act2id:
-                logger.warning(f'未找到活动名 {actname}')
-                win.send_qq(f"尚未更新 {actname}", logger, 'text')
-                continue
+                logger.warning(f'未找到活动名 {actname}，使用预设代号 {actid_pred}')
+                if log_qq:
+                    win.send_qq(f"未找到活动名 {actname}，使用预设代号 {actid_pred}", logger, 'text')
+                code = actid_pred
+                # continue
             else:
                 code = act2id[actname]
             ori_data = f"{home_dir}/gamedata/story/activities/{code}/*.txt"
@@ -87,8 +94,9 @@ try:
                     story_count -= 1
                     break
             if len(file_list) == 0:
-                logger.warning(f"未找到活动文件 {code}")
-                win.send_qq(f"尚未更新 {code}", logger, 'text')
+                logger.warning(f"未找到活动文件 {actname} / {code}")
+                if log_qq:
+                    win.send_qq(f"尚未更新 {actname} / {code}", logger, 'text')
                 continue
         else:
             logger.error(f"错误的活动类型 {acttype}")
@@ -163,23 +171,29 @@ try:
             actname = f'EP{actname}'
             actname = actname.replace('_', ' ')
         fig_table = visualize.plot_table(df, actname, False)
+        fig_full_table = visualize.plot_table(df, show=False)
         fig_path = utils.solve_filename(f'full_{acttime}.png')
         fig_table_path = utils.solve_filename(f'table_{acttime}.png')
+        fig_full_table_path = utils.solve_filename(f'full_table_{acttime}.png')
         fig_part_path = utils.solve_filename(f'{acttype}_{acttime}.png')
         fig.write_image(fig_path, engine="kaleido")
         fig_part.write_image(fig_part_path, engine="kaleido")
         fig_table.write_image(fig_table_path, engine="kaleido")
-        logger.debug(f'plot {fig_path.split("/")[-1]}, {fig_part_path.split("/")[-1]}, {fig_table_path.split("/")[-1]} to ./data')
+        fig_full_table.write_image(fig_full_table_path, engine="kaleido")
+        logger.debug(f'plot {fig_path.split("/")[-1]}, {fig_part_path.split("/")[-1]}, {fig_table_path.split("/")[-1]}, {fig_full_table_path.split("/")[-1]} to ./data')
 
         fig = visualize.crop_img(fig_path)
         fig_part = visualize.crop_img(fig_part_path)
         fig_table = visualize.crop_img(fig_table_path)
+        fig_full_table = visualize.crop_img(fig_full_table_path)
         visualize.watermark(fig, x=fig.size[0]-300, y=50, output_path=fig_path)
         visualize.watermark(fig_part, x=75, y=50, output_path=fig_part_path)
 
-        win.send_qq(fig_path, logger, 'image')
-        win.send_qq(fig_part_path, logger, 'image')
-        win.send_qq(fig_table_path, logger, 'image')
+        if log_qq:
+            win.send_qq(fig_path, logger, 'image')
+            win.send_qq(fig_part_path, logger, 'image')
+            win.send_qq(fig_table_path, logger, 'image')
+            win.send_qq(fig_full_table_path, logger, 'image')
 
 
         # 自动输出文案
@@ -211,7 +225,20 @@ try:
         else:
             writes += utils.TEMPLATE_MEMORY.format(memory_op, memory_count, count_memory/10000)
         logger.info(writes)
-        win.send_qq(writes, logger, 'text')
+        if log_qq:
+            win.send_qq(writes, logger, 'text')
+
+
+        # 更新总字数
+        with open('./data/char_sum.txt', mode='r', encoding='utf-8') as f:
+            char_sum = int(f.readline())
+        char_sum += count
+        char_sum += count_memory
+        with open('./data/char_sum.txt', mode='w', encoding='utf-8') as f:
+            f.write(str(char_sum))
+        logger.info(f'现总字数: {char_sum}')
+        if log_qq:
+            win.send_qq(f'现总字数: {char_sum}', logger, 'text')
 
         break
 
@@ -219,6 +246,7 @@ except Exception as e:
     logger.error(f'捕捉到例外 {e}')
 finally:
     logger.info('=====程序已停止=====')
-    win.send_qq("=====程序已停止=====", logger, 'text')
-    with open('./logging.txt', encoding='utf_8') as f:
-        win.send_qq(f.read(), logger, 'text')
+    if log_qq:
+        win.send_qq("=====程序已停止=====", logger, 'text')
+        with open('./logging.txt', encoding='utf_8') as f:
+            win.send_qq(f.read(), logger, 'text')

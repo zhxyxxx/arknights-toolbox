@@ -133,7 +133,7 @@ def send_qq(content, logger, data_format='text', user_name="X-X-X"):
     user_name: 发送对象用户名（确保已且仅打开该用户聊天窗口）
 
     return
-    e: 发生的例外(无例外发生时返回0)
+    flag: 是否成功发送
     '''
     class DROPFILES(Structure):
         _fields_ = [("pFiles", c_uint),
@@ -169,14 +169,14 @@ def send_qq(content, logger, data_format='text', user_name="X-X-X"):
             w.SetClipboardData(win32con.CF_HDROP, data)
     except Exception as e:
         logger.error(f'发送\'{content}\'至QQ时发生例外: {e}')
-        return e
+        return False
     finally:
         w.CloseClipboard()
 
     handle = win32gui.FindWindow(None, user_name)
     if handle == 0:
         logger.error(f'发送\'{content}\'至QQ时发生例外: 未找到窗口{user_name}')
-        return -1
+        return False
     try:
         win32gui.SetWindowPos(handle, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
         time.sleep(1)
@@ -188,8 +188,8 @@ def send_qq(content, logger, data_format='text', user_name="X-X-X"):
         win32gui.SendMessage(handle, win32con.WM_KEYDOWN, win32con.VK_RETURN)
     except Exception as e:
         logger.error(f'发送\'{content}\'至QQ时发生例外: {e}')
-        return e
+        return False
     finally:
         win32gui.SetWindowPos(handle, win32con.HWND_NOTOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
     
-    return 0
+    return True
