@@ -8,7 +8,9 @@ import math
 
 import utils.visualize
 
-def make_df(df, star, anni, color_dict):
+elite_data_file = './data/elite_data/elite_data_65.csv'
+
+def make_df(df, star, color_dict, anni = None):
     new_df = df.query(f"star == '{star}'")
     new_df = new_df[['char', 'cost', 'time']]
     new_df.sort_values('cost', inplace=True, ascending=False)
@@ -19,16 +21,23 @@ def make_df(df, star, anni, color_dict):
     color = [color_dict[star][0]] * len(new_df)
     for i in range(len(new_df)):
         impl_time = new_df.iloc[i].time
-        dt = datetime.datetime.strptime(impl_time, '%Y-%m-%d')
-        date = datetime.date(dt.year, dt.month, dt.day)
-        if anni*10 % 10 == 0: # 周年
-            start = datetime.date(int(2019+anni-1), 11, 2)
-            end = datetime.date(int(2019+anni), 5, 1)
-        else: # 半周年
-            start = datetime.date(int(2019+anni-0.5), 5, 2)
-            end = datetime.date(int(2019+anni-0.5), 11, 1)
-        if not (date < start or date > end):
+        if impl_time == 'new':
             color[i] = color_dict[star][1]
+        elif impl_time == '' or impl_time == '-':
+            continue
+        elif anni is not None:
+            dt = datetime.datetime.strptime(impl_time, '%Y-%m-%d')
+            date = datetime.date(dt.year, dt.month, dt.day)
+            if anni*10 % 10 == 0: # 周年
+                start = datetime.date(int(2019+anni-1), 11, 2)
+                end = datetime.date(int(2019+anni), 5, 1)
+            else: # 半周年
+                start = datetime.date(int(2019+anni-0.5), 5, 2)
+                end = datetime.date(int(2019+anni-0.5), 11, 1)
+            if not (date < start or date > end):
+                color[i] = color_dict[star][1]
+        else:
+            print('not compatiable impl_time')
 
     new_df = new_df[['id', 'char', 'cost']]
     return new_df, color
@@ -109,15 +118,16 @@ color_dict = {6: ['#f5c193', '#ff8c00'],
               5: ['#f0e68c', '#ffd700'],
               4: ['#d8bfd8', '#ee82ee']}
 
-with open('./resource/item_value_table.json', encoding='utf-8') as f:
+# update item.json
+with open('./resource/item.json', encoding='utf-8') as f:
     jdic = json.load(f)
 
 item_dic = {}
 for item in jdic:
-    item_dic[item['name']] = item['apValue']
+    item_dic[item['name']] = float(item['apValue'])
 
 char_dic = {}
-with open("./data/elite_data/elite_data.csv", encoding="utf-8") as f:
+with open(elite_data_file, encoding="utf-8") as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0] == 'char':
@@ -129,12 +139,12 @@ df = pd.DataFrame(char_dic).T
 df['char'] = df.index.values
 df.reset_index(inplace=True, drop=True)
 
-df_full = pd.read_csv("./data/elite_data/elite_data.csv")
+df_full = pd.read_csv(elite_data_file)
 df_full = df_full.assign(cost=df['cost'])
 
-df_6, color_6 = make_df(df, 6, 5.5, color_dict)
-df_5, color_5 = make_df(df, 5, 5.5, color_dict)
-df_4, color_4 = make_df(df, 4, 5, color_dict)
+df_6, color_6 = make_df(df, 6, color_dict)
+df_5, color_5 = make_df(df, 5, color_dict)
+df_4, color_4 = make_df(df, 4, color_dict)
 fig_table_6 = plot_final_table(df_6, color_6)
 fig_table_6.write_image('./data/elite_data/table_6.png', engine="kaleido")
 fig_table_5 = plot_final_table(df_5, color_5)
